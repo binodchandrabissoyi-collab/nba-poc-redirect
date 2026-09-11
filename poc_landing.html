@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Redirect PoC — corp-dev.nba.com</title>
+<style>
+  :root { --red:#e63946; --bg:#0f1115; --panel:#181b21; --line:#2a2f38; --fg:#e7e9ee; --dim:#8a93a3; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--fg); margin:0; padding:40px 20px; line-height:1.5;
+  }
+  .box { max-width:720px; margin:0 auto; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:32px; }
+  .banner {
+    display:inline-block; background:var(--red); color:#fff; font-weight:600;
+    font-size:12px; letter-spacing:.5px; text-transform:uppercase;
+    padding:4px 10px; border-radius:4px; margin-bottom:16px;
+  }
+  h1 { font-size:22px; margin:0 0 8px; color:#fff; }
+  .sub { color:var(--dim); font-size:14px; margin:0 0 24px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--dim); margin:24px 0 8px; }
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background:#000; border:1px solid var(--line); border-radius:6px;
+  }
+  code { padding:2px 6px; color:#8ee; font-size:13px; }
+  pre { padding:14px; overflow:auto; color:#8ee; font-size:13px; margin:0; white-space:pre-wrap; word-break:break-all; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td { padding:8px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  td:first-child { color:var(--dim); width:170px; }
+  td:last-child { color:#fff; word-break:break-all; }
+  .copy {
+    margin-top:10px; background:#22262e; color:#cfd6e2; border:1px solid var(--line);
+    padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px;
+  }
+  .copy:hover { background:#2c313a; }
+  .footer { margin-top:28px; padding-top:18px; border-top:1px solid var(--line); font-size:12px; color:var(--dim); }
+</style>
+</head>
+<body>
+  <div class="box">
+    <span class="banner">Proof of Concept — Not a Phishing Page</span>
+    <h1>Open Redirect Confirmed</h1>
+    <p class="sub">
+      This page was reached because <code>corp-dev.nba.com</code> redirected an authenticated
+      session to an attacker-controlled destination using an unvalidated <code>site</code> parameter.
+    </p>
+
+    <h2>Captured Evidence</h2>
+    <table>
+      <tr><td>Redirect source (Referer)</td><td id="ref">—</td></tr>
+      <tr><td>Landed URL</td><td id="url">—</td></tr>
+      <tr><td>Injected <code>site</code> value</td><td id="site">—</td></tr>
+      <tr><td>User agent</td><td id="ua">—</td></tr>
+      <tr><td>Captured at (UTC)</td><td id="ts">—</td></tr>
+    </table>
+
+    <button class="copy" id="copyBtn">Copy evidence to clipboard</button>
+
+    <h2>Raw Evidence</h2>
+    <pre id="raw">—</pre>
+
+    <div class="footer">
+      Reported for the NBA Public Bug Bounty program (HackerOne) · CWE-601: URL Redirection to Untrusted Site.<br>
+      No credentials, cookies, or user data were collected by this page.
+    </div>
+  </div>
+
+<script>
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var data = {
+      referrer: document.referrer || "(none — direct navigation)",
+      landedUrl: location.href,
+      injectedSite: params.get("site") || "(not present in query)",
+      userAgent: navigator.userAgent,
+      timestampUTC: new Date().toISOString()
+    };
+
+    document.getElementById("ref").textContent  = data.referrer;
+    document.getElementById("url").textContent  = data.landedUrl;
+    document.getElementById("site").textContent = data.injectedSite;
+    document.getElementById("ua").textContent   = data.userAgent;
+    document.getElementById("ts").textContent   = data.timestampUTC;
+
+    var raw =
+      "referrer:  " + data.referrer + "\n" +
+      "landedUrl: " + data.landedUrl + "\n" +
+      "site:      " + data.injectedSite + "\n" +
+      "userAgent: " + data.userAgent + "\n" +
+      "timestamp: " + data.timestampUTC;
+    document.getElementById("raw").textContent = raw;
+
+    document.getElementById("copyBtn").addEventListener("click", function () {
+      navigator.clipboard.writeText(raw).then(function () {
+        var b = document.getElementById("copyBtn");
+        b.textContent = "Copied ✓";
+        setTimeout(function () { b.textContent = "Copy evidence to clipboard"; }, 1500);
+      });
+    });
+  })();
+</script>
+</body>
+</html>
